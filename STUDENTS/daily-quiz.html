@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Quiz - SVIST Premium</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #0f172a; --accent: #f59e0b; --success: #10b981; --bg: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        .top-nav { background: var(--primary); color: white; padding: 12px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .timer { background: #1e293b; padding: 8px 15px; border-radius: 8px; font-weight: 700; color: #fbbf24; border: 1px solid #334155; }
+
+        .exam-container { display: flex; flex-grow: 1; overflow: hidden; }
+        .question-box { flex-grow: 1; padding: 30px; overflow-y: auto; background: white; }
+        
+        /* Subject Badge - ये हर सवाल के लिए अलग दिखेगा */
+        .q-subject-tag { 
+            background: #fff7ed; color: #c2410c; padding: 4px 12px; border-radius: 20px; 
+            font-size: 11px; font-weight: 800; border: 1px solid #ffedd5; display: inline-block; margin-bottom: 10px;
+        }
+
+        .q-text { font-size: 20px; font-weight: 600; margin-bottom: 25px; color: var(--primary); }
+        
+        .option { display: flex; align-items: center; padding: 15px; border: 2px solid #e2e8f0; border-radius: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
+        .option.selected { border-color: var(--accent); background: #fffbeb; }
+        .option input { margin-right: 15px; accent-color: var(--accent); }
+
+        .action-bar { margin-top: 30px; display: flex; gap: 10px; }
+        .btn { padding: 12px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; border: none; flex: 1; }
+        .btn-next { background: var(--accent); color: white; }
+        
+        .sidebar { width: 300px; background: #f1f5f9; border-left: 1px solid #e2e8f0; padding: 20px; display: flex; flex-direction: column; }
+        .p-num { width: 35px; height: 35px; border-radius: 5px; border: 1px solid #cbd5e1; display: inline-flex; align-items: center; justify-content: center; margin: 4px; font-weight: 700; cursor: pointer; background: white; }
+        .p-num.done { background: var(--success); color: white; border: none; }
+        .p-num.active { border: 2px solid var(--accent); color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <div class="top-nav">
+        <div id="quizTitle" style="font-weight: 700;">DAILY QUIZ</div>
+        <div class="timer" id="clock"><i class="fa-regular fa-clock"></i> 15:00</div>
+    </div>
+
+    <div class="exam-container">
+        <div class="question-box">
+            <div id="subBadge" class="q-subject-tag">SUBJECT</div>
+            <div id="qContent"></div>
+
+            <div class="action-bar">
+                <button class="btn" style="background:#e2e8f0" onclick="changeQuestion(-1)">PREVIOUS</button>
+                <button class="btn btn-next" onclick="saveAndNext()">SAVE & NEXT</button>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <h4 style="margin-top:0;">Questions</h4>
+            <div id="palette"></div>
+            <button onclick="submitQuiz()" style="margin-top:auto; padding:15px; background:#ef4444; color:white; border:none; border-radius:8px; font-weight:700; cursor:pointer;">SUBMIT QUIZ</button>
+        </div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const qIdx = params.get('quizIndex') || 0;
+        
+        const quizzes = JSON.parse(localStorage.getItem('dailyQuizzes')) || [];
+        const currentQuiz = quizzes[qIdx];
+        
+        let currentIdx = 0;
+        let answers = new Array(currentQuiz?.questions.length || 0).fill(null);
+        let time = 15 * 60;
+
+        function loadQuestion(idx) {
+            if(!currentQuiz) return;
+            currentIdx = idx;
+            const q = currentQuiz.questions[idx];
+            
+            document.getElementById('quizTitle').innerText = currentQuiz.title;
+            // यहाँ सवाल का अपना सब्जेक्ट दिखेगा
+            document.getElementById('subBadge').innerText = q.subject || currentQuiz.subject || "GENERAL";
+            
+            document.getElementById('qContent').innerHTML = `
+                <div class="q-text">${idx+1}. ${q.q}</div>
+                ${q.options.map((opt, i) => `
+                    <div class="option ${answers[idx] === i ? 'selected' : ''}" onclick="selectOpt(${i})">
+                        <input type="radio" ${answers[idx] === i ? 'checked' : ''}> ${opt}
+                    </div>
+                `).join('')}
+            `;
+            renderPalette();
+        }
+
+        function selectOpt(i) {
+            answers[currentIdx] = i;
+            loadQuestion(currentIdx);
+        }
+
+        function saveAndNext() {
+            if(currentIdx < currentQuiz.questions.length - 1) loadQuestion(currentIdx + 1);
+            else alert("Last question! Click Submit to finish.");
+        }
+
+        function changeQuestion(s) {
+            let next = currentIdx + s;
+            if(next >= 0 && next < currentQuiz.questions.length) loadQuestion(next);
+        }
+
+        function renderPalette() {
+            document.getElementById('palette').innerHTML = currentQuiz.questions.map((_, i) => `
+                <div class="p-num ${currentIdx === i ? 'active' : ''} ${answers[i] !== null ? 'done' : ''}" onclick="loadQuestion(${i})">${i+1}</div>
+            `).join('');
+        }
+
+        function startTimer() {
+            setInterval(() => {
+                time--;
+                let m = Math.floor(time/60), s = time%60;
+                document.getElementById('clock').innerHTML = `<i class="fa-regular fa-clock"></i> ${m}:${s<10?'0':''}${s}`;
+                if(time <= 0) submitQuiz(true);
+            }, 1000);
+        }
+
+        function submitQuiz(auto = false) {
+            if(!auto && !confirm("Submit Quiz?")) return;
+            let score = 0;
+            currentQuiz.questions.forEach((q, i) => { if(answers[i] == q.correct) score++; });
+
+            const results = JSON.parse(localStorage.getItem('portalResults')) || [];
+            results.push({
+                subject: "Daily Quiz",
+                testName: currentQuiz.title,
+                score: score,
+                total: currentQuiz.questions.length,
+                date: new Date().toLocaleDateString(),
+                type: 'Daily'
+            });
+            localStorage.setItem('portalResults', JSON.stringify(results));
+            window.location.href = "result.html";
+        }
+
+        window.onload = () => { if(currentQuiz) { loadQuestion(0); startTimer(); } };
+    </script>
+</body>
+</html>

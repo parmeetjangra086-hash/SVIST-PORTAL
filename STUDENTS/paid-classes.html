@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Batches - SVIST</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: white; margin: 0; padding: 20px; text-align: center; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 1200px; margin: 40px auto; }
+        .card { background: white; color: #1e293b; border-radius: 20px; padding: 20px; position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .card img { width: 100%; border-radius: 15px; height: 180px; object-fit: cover; }
+        .price { font-size: 24px; font-weight: 800; color: #3b82f6; margin: 15px 0; }
+        .btn { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 16px; }
+        .buy-btn { background: #3b82f6; color: white; }
+        .watch-btn { background: #22c55e; color: white; }
+        .lock-tag { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <h1>Our Premium Batches</h1>
+    <p>Enroll in our structured courses to guarantee your success</p>
+
+    <div class="grid" id="batchContainer">
+        </div>
+
+    <script>
+        // Maan lo login ke waqt ye ID save hui thi
+        const studentId = localStorage.getItem('svist_permanent_id') || "GUEST_USER";
+
+        function loadBatches() {
+            const container = document.getElementById('batchContainer');
+            const batches = JSON.parse(localStorage.getItem('batchAdminList')) || [];
+            
+            // Student ka apna unique locker
+            const userKey = `unlocked_${studentId}`;
+            const myUnlocked = JSON.parse(localStorage.getItem(userKey)) || [];
+
+            container.innerHTML = batches.map(b => {
+                const isUnlocked = myUnlocked.includes(b.name);
+                return `
+                    <div class="card">
+                        <div class="lock-tag">${isUnlocked ? '🔓 Unlocked' : '🔒 Locked'}</div>
+                        <img src="${b.img || 'https://via.placeholder.com/300x180'}" alt="cover">
+                        <h3>${b.name}</h3>
+                        <p class="price">₹${b.fees}</p>
+                        ${isUnlocked ? 
+                            `<button class="btn watch-btn" onclick="location.href='videos.html?batch=${b.name}'">WATCH NOW</button>` : 
+                            `<button class="btn buy-btn" onclick="goToPayment('${b.name}', '${b.fees}')">BUY NOW</button>`
+                        }
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function goToPayment(name, price) {
+            window.location.href = `payment.html?batchName=${encodeURIComponent(name)}&price=${price}&uid=${studentId}`;
+        }
+
+        window.onload = loadBatches;
+    </script>
+</body>
+</html>

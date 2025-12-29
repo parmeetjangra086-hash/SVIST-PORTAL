@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Lectures - SVIST</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #0f172a; --accent: #3b82f6; --bg: #f8fafc; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: #1e293b; }
+        
+        .header { background: white; padding: 25px 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .header h1 { margin: 0; font-size: 26px; color: var(--primary); }
+        .header p { color: #64748b; margin: 5px 0 0; }
+
+        .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+        
+        .subject-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+            gap: 25px; 
+        }
+
+        .sub-card { 
+            background: white; 
+            border-radius: 20px; 
+            padding: 30px; 
+            text-align: center; 
+            text-decoration: none; 
+            color: inherit; 
+            transition: 0.3s; 
+            border: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .sub-card:hover { 
+            transform: translateY(-10px); 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            border-color: var(--accent);
+        }
+
+        .icon-box { 
+            width: 80px; height: 80px; 
+            background: #eff6ff; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin-bottom: 20px; 
+            font-size: 32px; 
+            color: var(--accent); 
+        }
+
+        .sub-card h3 { margin: 0; font-size: 20px; font-weight: 700; }
+        .sub-card span { font-size: 13px; color: #94a3b8; margin-top: 8px; }
+        
+        .badge { background: #3b82f6; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11px; margin-bottom: 15px; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Video Library</h1>
+        <p>Select a subject to start learning</p>
+    </div>
+
+    <div class="container">
+        <div class="subject-grid">
+            <a href="subject-view.html?sub=MATH" class="sub-card">
+                <div class="badge">LIVE CLASSES</div>
+                <div class="icon-box"><i class="fa-solid fa-calculator"></i></div>
+                <h3>Mathematics</h3>
+                <span>Basic to Advanced</span>
+            </a>
+
+            <a href="subject-view.html?sub=HINDI" class="sub-card">
+                <div class="badge">COMPLETED</div>
+                <div class="icon-box"><i class="fa-solid fa-book-open"></i></div>
+                <h3>Hindi Grammar</h3>
+                <span>Full Syllabus</span>
+            </a>
+
+            <a href="subject-view.html?sub=REASONING" class="sub-card">
+                <div class="badge">UPDATED</div>
+                <div class="icon-box"><i class="fa-solid fa-brain"></i></div>
+                <h3>Reasoning</h3>
+                <span>Logical Ability</span>
+            </a>
+
+            <a href="subject-view.html?sub=SCIENCE" class="sub-card">
+                <div class="badge">NEW</div>
+                <div class="icon-box"><i class="fa-solid fa-microscope"></i></div>
+                <h3>General Science</h3>
+                <span>Physics, Chem, Bio</span>
+            </a>
+
+            <a href="subject-view.html?sub=STATIC GK" class="sub-card">
+                <div class="badge">DAILY</div>
+                <div class="icon-box"><i class="fa-solid fa-earth-americas"></i></div>
+                <h3>Static GK</h3>
+                <span>Current Affairs & GK</span>
+            </a>
+        </div>
+    </div>
+
+</body>
+</html>

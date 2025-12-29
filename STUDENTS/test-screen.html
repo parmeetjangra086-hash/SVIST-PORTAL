@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Test - SVIST Premium</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #0f172a; --accent: #3b82f6; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --bg: #f1f5f9; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        .top-nav { background: var(--primary); color: white; padding: 12px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .timer { background: #1e293b; padding: 8px 18px; border-radius: 8px; font-weight: 700; color: #fbbf24; border: 1px solid #334155; font-size: 16px; min-width: 150px; text-align: center; }
+
+        .exam-container { display: flex; flex-grow: 1; overflow: hidden; }
+        .question-box { flex-grow: 1; padding: 40px; overflow-y: auto; background: white; display: flex; flex-direction: column; }
+        .q-header { border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-end; }
+        
+        /* Subject Badge Style */
+        .subject-badge { background: #eff6ff; color: var(--accent); padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 800; text-transform: uppercase; border: 1px solid #dbeafe; display: inline-block; margin-bottom: 8px; }
+
+        .q-text { font-size: 22px; font-weight: 600; line-height: 1.6; margin-bottom: 30px; color: var(--primary); }
+        
+        .option { display: flex; align-items: center; padding: 15px 20px; border: 2px solid #e2e8f0; border-radius: 12px; margin-bottom: 12px; cursor: pointer; transition: 0.2s; font-weight: 500; }
+        .option:hover { border-color: var(--accent); background: #f8fafc; }
+        .option.selected { border-color: var(--accent); background: #eff6ff; border-left: 8px solid var(--accent); }
+        .option input { margin-right: 15px; width: 18px; height: 18px; accent-color: var(--accent); }
+
+        .action-bar { margin-top: auto; padding-top: 25px; border-top: 1px solid #e2e8f0; display: flex; gap: 15px; }
+        .btn { padding: 12px 25px; border-radius: 8px; font-weight: 700; cursor: pointer; border: none; transition: 0.3s; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        .btn-clear { background: #f1f5f9; color: #64748b; }
+        .btn-prev { background: var(--primary); color: white; }
+        .btn-save { background: var(--accent); color: white; flex-grow: 1; justify-content: center; }
+
+        .sidebar { width: 320px; background: #f8fafc; border-left: 1px solid #e2e8f0; padding: 25px; display: flex; flex-direction: column; }
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 20px 0; overflow-y: auto; max-height: 350px; }
+        .p-num { width: 42px; height: 42px; border-radius: 8px; border: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-weight: 700; cursor: pointer; background: white; }
+        .p-num.active { border: 2px solid var(--accent); color: var(--accent); }
+        .p-num.done { background: var(--success); color: white; border-color: var(--success); }
+        
+        .finish-btn { background: var(--danger); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: 700; cursor: pointer; width: 100%; margin-top: auto; }
+    </style>
+</head>
+<body>
+
+    <div class="top-nav">
+        <div id="testTitle" style="font-weight: 700; font-size: 18px;">LOADING TEST...</div>
+        <div class="timer" id="clock"><i class="fa-regular fa-clock"></i> 90:00</div>
+    </div>
+
+    <div class="exam-container">
+        <div class="question-box">
+            <div class="q-header">
+                <div>
+                    <div id="subName" class="subject-badge">SUBJECT</div><br>
+                    <span id="qTag" style="color:var(--accent); font-weight:700;">QUESTION 1</span>
+                </div>
+                <span id="marksTag" style="font-size: 12px; color: #94a3b8;">Marks: 1.0</span>
+            </div>
+            
+            <div id="qContent"></div>
+
+            <div class="action-bar">
+                <button class="btn btn-clear" onclick="clearOption()"><i class="fa-solid fa-eraser"></i> CLEAR</button>
+                <button class="btn btn-prev" id="prevBtn" onclick="changeQuestion(-1)"><i class="fa-solid fa-chevron-left"></i> PREVIOUS</button>
+                <button class="btn btn-save" id="nextBtn" onclick="saveAndNext()">SAVE & NEXT <i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <h4 style="margin:0 0 10px 0; color:#475569;">TEST NAVIGATOR</h4>
+            <div class="palette" id="paletteBox"></div>
+            <button class="finish-btn" onclick="submitExam()">FINISH TEST</button>
+        </div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const tIdx = params.get('testIndex') || 0;
+        const isWeekly = params.get('type') === 'weekly';
+        
+        const storageKey = isWeekly ? 'weeklyTests' : 'portalTests';
+        const tests = JSON.parse(localStorage.getItem(storageKey)) || [];
+        const currentTest = tests[tIdx];
+        
+        let currentIdx = 0;
+        let savedAnswers = new Array(currentTest?.questions.length || 0).fill(null);
+        let timeLeft = 90 * 60; 
+
+        function startTimer() {
+            const timerDisplay = document.getElementById('clock');
+            const timerInterval = setInterval(() => {
+                let mins = Math.floor(timeLeft / 60);
+                let secs = timeLeft % 60;
+                timerDisplay.innerHTML = `<i class="fa-regular fa-clock"></i> ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    alert("Time is up! Your test will be submitted automatically.");
+                    submitExam(true);
+                }
+                timeLeft--;
+            }, 1000);
+        }
+
+        function loadQuestion(idx) {
+            if(!currentTest) return;
+            currentIdx = idx;
+            const q = currentTest.questions[idx];
+            
+            document.getElementById('testTitle').innerText = currentTest.title.toUpperCase();
+            // विषय का नाम यहाँ अपडेट हो रहा है
+            document.getElementById('subName').innerText = currentTest.subject || "GENERAL";
+            document.getElementById('qTag').innerText = `QUESTION ${idx + 1} OF ${currentTest.questions.length}`;
+            
+            const selectedOpt = savedAnswers[idx];
+
+            document.getElementById('qContent').innerHTML = `
+                <div class="q-text">${q.q}</div>
+                <div class="options-list">
+                    ${q.options.map((opt, i) => `
+                        <div class="option ${selectedOpt === i ? 'selected' : ''}" onclick="selectOption(${i})">
+                            <input type="radio" name="answer" ${selectedOpt === i ? 'checked' : ''}>
+                            <label>${opt}</label>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            document.getElementById('prevBtn').disabled = (idx === 0);
+            document.getElementById('nextBtn').innerHTML = (idx === currentTest.questions.length - 1) ? "SAVE & FINISH" : "SAVE & NEXT <i class='fa-solid fa-chevron-right'></i>";
+            
+            updatePalette();
+        }
+
+        function selectOption(optIdx) {
+            const opts = document.querySelectorAll('.option');
+            opts.forEach((o, i) => {
+                o.classList.toggle('selected', i === optIdx);
+                o.querySelector('input').checked = (i === optIdx);
+            });
+            savedAnswers[currentIdx] = optIdx;
+            updatePalette();
+        }
+
+        function clearOption() {
+            savedAnswers[currentIdx] = null;
+            loadQuestion(currentIdx);
+        }
+
+        function saveAndNext() {
+            if (currentIdx < currentTest.questions.length - 1) {
+                loadQuestion(currentIdx + 1);
+            } else {
+                submitExam();
+            }
+        }
+
+        function changeQuestion(step) {
+            const nextIdx = currentIdx + step;
+            if (nextIdx >= 0 && nextIdx < currentTest.questions.length) {
+                loadQuestion(nextIdx);
+            }
+        }
+
+        function updatePalette() {
+            const box = document.getElementById('paletteBox');
+            box.innerHTML = currentTest.questions.map((_, i) => `
+                <div class="p-num ${currentIdx === i ? 'active' : ''} ${savedAnswers[i] !== null ? 'done' : ''}" 
+                     onclick="loadQuestion(${i})">${i + 1}</div>
+            `).join('');
+        }
+
+        function submitExam(auto = false) {
+            if(!auto && !confirm("Are you sure you want to submit the test?")) return;
+            
+            let score = 0;
+            currentTest.questions.forEach((q, i) => {
+                if(savedAnswers[i] !== null && savedAnswers[i] == q.correct) score++;
+            });
+
+            const results = JSON.parse(localStorage.getItem('portalResults')) || [];
+            results.push({
+                subject: currentTest.subject,
+                testName: currentTest.title,
+                score: score,
+                total: currentTest.questions.length,
+                date: new Date().toLocaleDateString(),
+                type: isWeekly ? 'Weekly' : 'Daily'
+            });
+            localStorage.setItem('portalResults', JSON.stringify(results));
+
+            alert(`Test Submitted Successfully!\nScore: ${score}/${currentTest.questions.length}`);
+            window.location.href = "result.html";
+        }
+
+        window.onload = () => {
+            if(currentTest) {
+                loadQuestion(0);
+                startTimer();
+            } else {
+                alert("No test data found!");
+                window.location.href = "index.html";
+            }
+        };
+    </script>
+</body>
+</html>
