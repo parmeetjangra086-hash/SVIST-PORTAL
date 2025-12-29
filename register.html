@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>Register - SVIST</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #fdf2f2; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .reg-card { background: white; padding: 30px; border-radius: 15px; width: 380px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-top: 5px solid #b33912; }
+        input { width: 92%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        button { width: 100%; padding: 12px; background: #ff5e00; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        #otpBox { display: none; margin-top: 15px; background: #fff3e0; padding: 15px; border-radius: 8px; border: 1px dashed #ff5e00; }
+    </style>
+</head>
+<body>
+
+<div class="reg-card">
+    <h2 style="color:#b33912; text-align:center;">नया रजिस्ट्रेशन</h2>
+    <input type="file" id="regPhoto" accept="image/*">
+    <input type="text" id="regName" placeholder="पूरा नाम">
+    <input type="number" id="regMobile" placeholder="मोबाइल नंबर">
+    <input type="text" id="regUser" placeholder="Username">
+    <input type="password" id="regPass" placeholder="Password">
+    <button id="sendBtn" onclick="sendOTP()">OTP भेजें</button>
+
+    <div id="otpBox">
+        <p style="font-size:12px;">आपके नंबर पर भेजा गया कोड: <b id="showOTP" style="color:red; font-size:16px;"></b></p>
+        <input type="number" id="userOTP" placeholder="Enter OTP">
+        <button onclick="createID()" style="background:#27ae60;">Verify & Register</button>
+    </div>
+</div>
+
+<script>
+    let generatedOTP;
+
+    function sendOTP() {
+        const mobile = document.getElementById('regMobile').value;
+        if(mobile.length < 10) { alert("सही मोबाइल नंबर डालें!"); return; }
+
+        generatedOTP = Math.floor(1000 + Math.random() * 9000);
+        document.getElementById('showOTP').innerText = generatedOTP;
+        document.getElementById('otpBox').style.display = 'block';
+        document.getElementById('sendBtn').style.display = 'none';
+        alert("OTP भेजा गया है!");
+    }
+
+    function createID() {
+        const inputOTP = document.getElementById('userOTP').value;
+        if(inputOTP == generatedOTP) {
+            const photoInput = document.getElementById('regPhoto').files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const userData = {
+                    name: document.getElementById('regName').value,
+                    username: document.getElementById('regUser').value,
+                    password: document.getElementById('regPass').value,
+                    photo: e.target.result
+                };
+                localStorage.setItem(userData.username, JSON.stringify(userData));
+                alert("ID बन गई है!");
+                window.location.href = "login.html";
+            };
+            reader.readAsDataURL(photoInput);
+        } else {
+            alert("गलत OTP!");
+        }
+    }
+</script>
+</body>
+</html>
